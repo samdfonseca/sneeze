@@ -13,7 +13,7 @@ and attaches them to the Tissue.
 
 from nose.plugins import Plugin
 from sneeze.database.interface import Tissue
-import os, sys, socket, pkg_resources
+import os, sys, socket, pkg_resources, datetime
 from nose.exc import SkipTest, DeprecatedTest
 from multiprocessing import current_process
 
@@ -43,6 +43,12 @@ class Sneeze(Plugin):
                           dest='test_cycle_description',
                           metavar='DESCRIPTION',
                           help='Description for the test cycle being run.')
+        parser.add_option('--project-name',
+                          action='store',
+                          default=env.get('SNEEZE_PROJECT_NAME', os.path.basename(os.getcwd())),
+                          dest='project_name',
+                          metavar='PROJECT_NAME',
+                          help='Name of the project nosetests/sneeze are run on.')
         parser.add_option('--test-cycle-id',
                           action='store',
                           default=0,
@@ -100,6 +106,13 @@ class Sneeze(Plugin):
             if not (hasattr(self, 'tissue') and self.tissue):
                 environment = os.environ.get(options.pocket_change_environment_envvar,
                                              '[no environment found]')
+
+                try:
+                    test_cycle_name = noseconfig.test_cycle_name
+                except AttributeError:
+                    test_cycle_name = '{project_name} {run_time}'.format(project_name=options.project_name,
+                                                                         run_time=datetime.datetime.now())
+
                 try:
                     test_cycle_id = noseconfig.test_cycle_id
                 except AttributeError:
@@ -107,7 +120,7 @@ class Sneeze(Plugin):
                     rerun_execution_ids = []
                 else:
                     rerun_execution_ids = options.case_execution_reruns
-                self.tissue = Tissue(options.reporting_db_config, options.test_cycle_name,
+                self.tissue = Tissue(options.reporting_db_config, test_cycle_name,
                                      options.test_cycle_description, environment,
                                      socket.gethostbyaddr(socket.gethostname())[0],
                                      ' '.join(sys.argv), test_cycle_id=test_cycle_id,
