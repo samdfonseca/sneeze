@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='nose-sneeze',
-      version='0.0.2',
+      version='0.0.3',
       author='Silas Ray',
       author_email='silas.ray@nytimes.com',
       license='Apache2.0',
